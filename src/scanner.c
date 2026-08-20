@@ -14,13 +14,13 @@ enum TokenType {
     JSX_TEXT,
 };
 
-void *tree_sitter_javascript_external_scanner_create() { return NULL; }
+void *tree_sitter_gls_js_external_scanner_create() { return NULL; }
 
-void tree_sitter_javascript_external_scanner_destroy(void *p) {}
+void tree_sitter_gls_js_external_scanner_destroy(void *p) {}
 
-unsigned tree_sitter_javascript_external_scanner_serialize(void *payload, char *buffer) { return 0; }
+unsigned tree_sitter_gls_js_external_scanner_serialize(void *payload, char *buffer) { return 0; }
 
-void tree_sitter_javascript_external_scanner_deserialize(void *p, const char *b, unsigned n) {}
+void tree_sitter_gls_js_external_scanner_deserialize(void *p, const char *b, unsigned n) {}
 
 static inline void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
 
@@ -330,7 +330,7 @@ static bool scan_jsx_text(TSLexer *lexer) {
     return saw_text;
 }
 
-bool tree_sitter_javascript_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
+bool tree_sitter_gls_js_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
     if (valid_symbols[TEMPLATE_CHARS]) {
         if (valid_symbols[AUTOMATIC_SEMICOLON]) {
             return false;

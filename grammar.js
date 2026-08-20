@@ -9,7 +9,7 @@
 // @ts-check
 
 module.exports = grammar({
-  name: 'javascript',
+  name: 'gls_js',
 
   externals: $ => [
     $._automatic_semicolon,
