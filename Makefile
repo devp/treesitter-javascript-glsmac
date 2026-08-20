@@ -10,8 +10,10 @@ GLSMAC ?= ../glsmac
 
 # Where a local neovim install looks for parsers/queries (core
 # vim.treesitter, not nvim-treesitter's registry -- see
-# glsmac-contrib/editor/neovim).
-NVIM_DATA ?= $(HOME)/.local/share/nvim
+# glsmac-contrib/editor/neovim). Must be .../nvim/site, not .../nvim --
+# only .../site is on 'runtimepath' by default (confirmed via
+# nvim_get_runtime_file; .../nvim bare is not).
+NVIM_DATA ?= $(HOME)/.local/share/nvim/site
 
 .PHONY: all deps generate build verify install clean
 
