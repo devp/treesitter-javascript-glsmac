@@ -58,13 +58,6 @@
  ] @constant
  (#match? @constant "^[A-Z_][A-Z\\d_]+$"))
 
-((identifier) @variable.builtin
- (#match? @variable.builtin "^(arguments|module|console|window|document)$")
- (#is-not? local))
-
-((identifier) @function.builtin
- (#eq? @function.builtin "require")
- (#is-not? local))
 
 ; Literals
 ;---------
