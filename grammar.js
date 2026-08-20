@@ -565,7 +565,19 @@ module.exports = grammar({
       $.yield_expression,
       // glsmac fork addition.
       $.pop_expression,
+      $.range_expression,
     ),
+
+    // GSE 'range' operator (OT_RANGE, src/gse/parser/JS.h:352): both
+    // sides optional (OL_ANY_OR_BOTH) -- used as a slice subscript, e.g.
+    // arr[2::5], arr[::3], arr[c::], or bare arr[::]. glsmac fork
+    // addition.
+    range_expression: $ => prec.left('binary_relation', choice(
+      seq(field('left', $.expression), '::', field('right', $.expression)),
+      seq(field('left', $.expression), '::'),
+      seq('::', field('right', $.expression)),
+      '::',
+    )),
 
     // GSE 'pop' operator (OT_POP, src/gse/parser/JS.h:344): postfix, no
     // right operand -- 'this.data_stack :~' pops and evaluates to the

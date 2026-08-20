@@ -70,6 +70,10 @@
         "named": true
       },
       {
+        "type": "range_expression",
+        "named": true
+      },
+      {
         "type": "ternary_expression",
         "named": true
       },
@@ -2502,6 +2506,32 @@
     }
   },
   {
+    "type": "range_expression",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "regex",
     "named": true,
     "fields": {
@@ -3269,6 +3299,10 @@
   },
   {
     "type": ":-",
+    "named": false
+  },
+  {
+    "type": "::",
     "named": false
   },
   {
