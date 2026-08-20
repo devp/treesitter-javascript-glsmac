@@ -980,6 +980,10 @@ module.exports = grammar({
         ['??', 'ternary'],
         ['instanceof', 'binary_relation'],
         ['in', 'binary_relation'],
+        // GSE array/collection operators (src/gse/parser/JS.h:340-350).
+        // glsmac fork addition.
+        [':+', 'binary_relation'],
+        [':-', 'binary_relation'],
       ].map(([operator, precedence, associativity]) =>
         (associativity === 'right' ? prec.right : prec.left)(precedence, seq(
           field('left', operator === 'in' ? choice($.expression, $.private_property_identifier) : $.expression),
