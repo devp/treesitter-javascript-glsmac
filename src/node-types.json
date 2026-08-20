@@ -814,7 +814,7 @@
         "required": true,
         "types": [
           {
-            "type": "statement_block",
+            "type": "gse_catch_handlers",
             "named": true
           }
         ]
@@ -1648,6 +1648,47 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "gse_catch_handler",
+    "named": true,
+    "fields": {
+      "handler": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "gse_catch_handlers",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "gse_catch_handler",
+          "named": true
+        }
+      ]
     }
   },
   {

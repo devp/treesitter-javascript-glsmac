@@ -526,10 +526,28 @@ module.exports = grammar({
       field('body', repeat($.statement)),
     ),
 
+    // GSE's catch body is not a statement block -- it's parsed as a plain
+    // object literal keyed by exception type name (glsmac
+    // src/gse/parser/JS.cpp:493, GetObject); a bare ':' with no key is the
+    // default handler. glsmac fork: catch_clause body replaced entirely
+    // (no real .gls.js file uses the classic JS statement-block form).
     catch_clause: $ => seq(
       'catch',
       optional(seq('(', field('parameter', choice($.identifier, $._destructuring_pattern)), ')')),
-      field('body', $.statement_block),
+      field('body', $.gse_catch_handlers),
+    ),
+
+    gse_catch_handlers: $ => seq(
+      '{',
+      commaSep($.gse_catch_handler),
+      optional(','),
+      '}',
+    ),
+
+    gse_catch_handler: $ => seq(
+      field('type', optional($.identifier)),
+      ':',
+      field('handler', $.expression),
     ),
 
     finally_clause: $ => seq(
