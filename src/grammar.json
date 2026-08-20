@@ -1924,8 +1924,37 @@
         {
           "type": "SYMBOL",
           "name": "yield_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "pop_expression"
         }
       ]
+    },
+    "pop_expression": {
+      "type": "PREC_LEFT",
+      "value": "binary_relation",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "argument",
+            "content": {
+              "type": "SYMBOL",
+              "name": "expression"
+            }
+          },
+          {
+            "type": "FIELD",
+            "name": "operator",
+            "content": {
+              "type": "STRING",
+              "value": ":~"
+            }
+          }
+        ]
+      }
     },
     "primary_expression": {
       "type": "CHOICE",

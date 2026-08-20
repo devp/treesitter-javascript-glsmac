@@ -563,7 +563,17 @@ module.exports = grammar({
       $.update_expression,
       $.new_expression,
       $.yield_expression,
+      // glsmac fork addition.
+      $.pop_expression,
     ),
+
+    // GSE 'pop' operator (OT_POP, src/gse/parser/JS.h:344): postfix, no
+    // right operand -- 'this.data_stack :~' pops and evaluates to the
+    // popped value. glsmac fork addition.
+    pop_expression: $ => prec.left('binary_relation', seq(
+      field('argument', $.expression),
+      field('operator', ':~'),
+    )),
 
     primary_expression: $ => choice(
       $.subscript_expression,

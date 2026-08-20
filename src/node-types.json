@@ -62,6 +62,10 @@
         "named": true
       },
       {
+        "type": "pop_expression",
+        "named": true
+      },
+      {
         "type": "primary_expression",
         "named": true
       },
@@ -2452,6 +2456,32 @@
     }
   },
   {
+    "type": "pop_expression",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": ":~",
+            "named": false
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "program",
     "named": true,
     "root": true,
@@ -3239,6 +3269,10 @@
   },
   {
     "type": ":-",
+    "named": false
+  },
+  {
+    "type": ":~",
     "named": false
   },
   {
