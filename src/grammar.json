@@ -2022,8 +2022,16 @@
         {
           "type": "SYMBOL",
           "name": "call_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "builtin_identifier"
         }
       ]
+    },
+    "builtin_identifier": {
+      "type": "PATTERN",
+      "value": "#[A-Za-z_][A-Za-z0-9_]*"
     },
     "yield_expression": {
       "type": "PREC_RIGHT",

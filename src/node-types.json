@@ -130,6 +130,10 @@
         "named": true
       },
       {
+        "type": "builtin_identifier",
+        "named": true
+      },
+      {
         "type": "call_expression",
         "named": true
       },
@@ -3336,6 +3340,10 @@
   {
     "type": "break",
     "named": false
+  },
+  {
+    "type": "builtin_identifier",
+    "named": true
   },
   {
     "type": "case",

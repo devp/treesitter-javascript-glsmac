@@ -588,7 +588,15 @@ module.exports = grammar({
       $.class,
       $.meta_property,
       $.call_expression,
+      // GSE builtin (#main, #include, #typeof, ...) -- glsmac fork addition.
+      $.builtin_identifier,
     ),
+
+    // GSE builtin identifier: '#' + JS identifier chars. GSE's
+    // Context::CreateBuiltin auto-prefixes every native with '#'; not
+    // related to JS private class fields, which is the only other place
+    // upstream allows a bare '#ident'. glsmac fork addition.
+    builtin_identifier: _ => /#[A-Za-z_][A-Za-z0-9_]*/,
 
     yield_expression: $ => prec.right(seq(
       'yield',
