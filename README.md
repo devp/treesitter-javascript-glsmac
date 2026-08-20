@@ -1,27 +1,66 @@
-# tree-sitter-javascript
+# tree-sitter-javascript-glsmac
 
-[![CI][ci]](https://github.com/tree-sitter/tree-sitter-javascript/actions/workflows/ci.yml)
-[![discord][discord]](https://discord.gg/w7nTvsVJhm)
-[![matrix][matrix]](https://matrix.to/#/#tree-sitter-chat:matrix.org)
-[![crates][crates]](https://crates.io/crates/tree-sitter-javascript)
-[![npm][npm]](https://www.npmjs.com/package/tree-sitter-javascript)
-[![pypi][pypi]](https://pypi.org/project/tree-sitter-javascript)
+Fork of [tree-sitter-javascript](https://github.com/tree-sitter/tree-sitter-javascript)
+for **GSE** (`.gls.js`), [GLSMAC](https://github.com/devp/glsmac)'s embedded
+script language. GSE is JS-*shaped* but not JS — this fork adds the handful
+of real grammar constructs JS doesn't have. See
+[glsmac-contrib/editor/neovim](https://github.com/devp/glsmac-contrib/tree/main/editor/neovim)
+for how this gets wired into an editor.
 
-JavaScript and JSX grammar for [tree-sitter](https://github.com/tree-sitter/tree-sitter).
+Language name is `gls_js`, not `javascript` — deliberate, so the built
+parser (`gls_js.so`, exported symbol `tree_sitter_gls_js`) can sit on a
+runtime path next to the real JS/TS parser without colliding.
 
-This grammar intends to be a close approximation of the [ECMAScript](https://ecma-international.org/publications-and-standards/standards/ecma-262/)
-specification, with some extensions to support JSX syntax. We try to support the
-latest version of the spec, though it is possible that some very new features may
-not be supported yet.
+## What's forked and why
 
-References
+Each grammar addition is its own commit with the rationale (and the
+`glsmac` source citation it's based on) in the commit body — `git log` is
+the actual changelog, this is just the summary:
 
-- [The ESTree Spec](https://github.com/estree/estree)
-- [The ECMAScript 2025 Spec](https://tc39.es/ecma262/2025/)
+| construct | example | GSE source |
+|---|---|---|
+| `#builtin(...)` call target | `#uppercase(x)`, `#main(fn)` | `src/gse/parser/JS.h:98-109`, `src/gse/context/Context.cpp:123` |
+| `#builtin` as assignment/declaration target | `let #builtin = 5;` | `src/gse/parser/JS.cpp` (GetObject path) |
+| `:+` push, `:-` erase | `arr :+ x` | `src/gse/parser/JS.h:340,348` |
+| `:~` pop (postfix, no right operand) | `arr :~` | `src/gse/parser/JS.h:344` |
+| `::` range (either side optional) | `arr[2::5]`, `arr[::3]`, `arr[::]` | `src/gse/parser/JS.h:352` |
+| catch body is a handler-map object, not a statement block | `catch { TypeName: (e) => {...}, : (e) => {...} }` | `src/gse/parser/JS.cpp:493` (`GetObject`) |
 
-[ci]: https://img.shields.io/github/actions/workflow/status/tree-sitter/tree-sitter-javascript/ci.yml?logo=github&label=CI
-[discord]: https://img.shields.io/discord/1063097320771698699?logo=discord&label=discord
-[matrix]: https://img.shields.io/matrix/tree-sitter-chat%3Amatrix.org?logo=matrix&label=matrix
-[npm]: https://img.shields.io/npm/v/tree-sitter-javascript?logo=npm
-[crates]: https://img.shields.io/crates/v/tree-sitter-javascript?logo=rust
-[pypi]: https://img.shields.io/pypi/v/tree-sitter-javascript?logo=pypi&logoColor=ffd242
+All citations are `glsmac` repo paths — clone it alongside this repo to
+check them (`GLSMAC` Makefile var, defaults to `../glsmac`).
+
+## Known gaps
+
+`GLSMAC_data/tests/exceptions.gls.js` has 6 remaining `ERROR` nodes,
+deliberately: it's a test fixture for the interpreter's runtime error
+paths (`1 = 5`, `'asd'++`, `(a, b) => {} = 5`). GSE's parser doesn't
+restrict assignment-LHS shape at parse time at all — any expression is
+syntactically legal there, validity is a runtime `GSEInvalidAssignment`.
+Matching that means loosening `_lhs_expression` to arbitrary
+`$.expression`, real ambiguity risk (`a + b = 5`?) for zero benefit to
+real authored code (every file under `GLSMAC_data/default/` — the actual
+game content — parses with zero `ERROR` nodes). Left as-is; `make verify`
+will (correctly) fail on this file until/unless that changes.
+
+## Build
+
+```sh
+make build              # gls_js.so
+make verify GLSMAC=../glsmac   # acceptance check against real .gls.js files
+make install                    # copy .so + queries to ~/.local/share/nvim
+```
+
+See `Makefile` for targets and overridable vars (`GLSMAC`, `NVIM_DATA`).
+
+## Updating from upstream
+
+`master` tracks upstream `tree-sitter/tree-sitter-javascript` unmodified.
+The fork commits live on `glsmac` (this repo's default branch). To pull
+upstream changes:
+
+```sh
+git fetch origin master
+git checkout glsmac
+git rebase origin/master
+make verify GLSMAC=../glsmac
+```
