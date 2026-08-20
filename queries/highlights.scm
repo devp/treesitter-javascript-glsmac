@@ -144,6 +144,12 @@
   "&&="
   "||="
   "??="
+
+  ; glsmac fork additions -- GSE array/collection operators.
+  ":+"
+  ":-"
+  ":~"
+  "::"
 ] @operator
 
 [
@@ -202,3 +208,11 @@
   "with"
   "yield"
 ] @keyword
+
+
+; glsmac fork additions.
+
+(builtin_identifier) @function.builtin
+
+(gse_catch_handler
+  type: (identifier) @type)
