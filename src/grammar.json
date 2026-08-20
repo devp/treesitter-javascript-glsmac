@@ -853,6 +853,10 @@
               {
                 "type": "SYMBOL",
                 "name": "_destructuring_pattern"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "builtin_identifier"
               }
             ]
           }
@@ -4052,6 +4056,10 @@
         {
           "type": "SYMBOL",
           "name": "_destructuring_pattern"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "builtin_identifier"
         }
       ]
     },

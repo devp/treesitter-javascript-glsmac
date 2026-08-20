@@ -346,6 +346,9 @@ module.exports = grammar({
         $.identifier,
         alias('of', $.identifier),
         $._destructuring_pattern,
+        // 'let #builtin = 5' -- same rationale as _lhs_expression above.
+        // glsmac fork addition.
+        $.builtin_identifier,
       )),
       optional($._initializer),
     ),
@@ -950,6 +953,11 @@ module.exports = grammar({
       $._identifier,
       alias($._reserved_identifier, $.identifier),
       $._destructuring_pattern,
+      // GSE allows assigning to a #builtin-shaped name syntactically --
+      // it's a runtime GSEInvalidAssignment, not a parse error (glsmac
+      // GLSMAC_data/tests/exceptions.gls.js: '#builtin = 5'). glsmac fork
+      // addition.
+      $.builtin_identifier,
     ),
 
     assignment_expression: $ => prec.right('assign', seq(
