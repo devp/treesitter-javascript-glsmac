@@ -1,99 +1,55 @@
-ifeq ($(OS),Windows_NT)
-$(error Windows is not supported)
-endif
+# treesitter-javascript-glsmac
+#
+# Fork of tree-sitter-javascript for GSE (.gls.js, GLSMAC's embedded
+# script language). See README.md for what's forked and why; each
+# grammar change is its own commit with rationale in the commit body,
+# git log is the actual changelog.
+#
+# GLSMAC ?= path to a glsmac checkout, needed only by `verify`.
+GLSMAC ?= ../glsmac
 
-LANGUAGE_NAME := tree-sitter-javascript
-HOMEPAGE_URL := https://github.com/tree-sitter/tree-sitter-javascript
-VERSION := 0.25.0
+# Where a local neovim install looks for parsers/queries (core
+# vim.treesitter, not nvim-treesitter's registry -- see
+# glsmac-contrib/editor/neovim).
+NVIM_DATA ?= $(HOME)/.local/share/nvim
 
-# repository
-SRC_DIR := src
+.PHONY: all deps generate build verify install clean
 
-TS ?= tree-sitter
+all: build
 
-# install directory layout
-PREFIX ?= /usr/local
-DATADIR ?= $(PREFIX)/share
-INCLUDEDIR ?= $(PREFIX)/include
-LIBDIR ?= $(PREFIX)/lib
-PCLIBDIR ?= $(LIBDIR)/pkgconfig
+deps: node_modules
 
-# source/object files
-PARSER := $(SRC_DIR)/parser.c
-EXTRAS := $(filter-out $(PARSER),$(wildcard $(SRC_DIR)/*.c))
-OBJS := $(patsubst %.c,%.o,$(PARSER) $(EXTRAS))
+node_modules: package.json
+	npm install
 
-# flags
-ARFLAGS ?= rcs
-override CFLAGS += -I$(SRC_DIR) -std=c11 -fPIC
+generate: deps
+	tree-sitter generate
 
-# ABI versioning
-SONAME_MAJOR = $(shell sed -n 's/\#define LANGUAGE_VERSION //p' $(PARSER))
-SONAME_MINOR = $(word 1,$(subst ., ,$(VERSION)))
+build: generate
+	tree-sitter build -o gls_js.so
 
-# OS-specific bits
-ifeq ($(shell uname),Darwin)
-	SOEXT = dylib
-	SOEXTVER_MAJOR = $(SONAME_MAJOR).$(SOEXT)
-	SOEXTVER = $(SONAME_MAJOR).$(SONAME_MINOR).$(SOEXT)
-	LINKSHARED = -dynamiclib -Wl,-install_name,$(LIBDIR)/lib$(LANGUAGE_NAME).$(SOEXTVER),-rpath,@executable_path/../Frameworks
-else
-	SOEXT = so
-	SOEXTVER_MAJOR = $(SOEXT).$(SONAME_MAJOR)
-	SOEXTVER = $(SOEXT).$(SONAME_MAJOR).$(SONAME_MINOR)
-	LINKSHARED = -shared -Wl,-soname,lib$(LANGUAGE_NAME).$(SOEXTVER)
-endif
-ifneq ($(filter $(shell uname),FreeBSD NetBSD DragonFly),)
-	PCLIBDIR := $(PREFIX)/libdata/pkgconfig
-endif
+# Acceptance check: parse every real .gls.js file in $(GLSMAC), fail if
+# any ERROR node remains. This is the actual bar, not "it compiles."
+verify: build
+	@if [ ! -d "$(GLSMAC)/GLSMAC_data" ]; then \
+		echo "GLSMAC_data not found under GLSMAC=$(GLSMAC) -- pass GLSMAC=<path-to-glsmac-checkout>"; \
+		exit 1; \
+	fi
+	@errors="$$(find "$(GLSMAC)/GLSMAC_data" -name '*.gls.js' -print0 \
+		| xargs -0 tree-sitter parse | grep ERROR || true)"; \
+	if [ -n "$$errors" ]; then \
+		echo "$$errors"; \
+		echo; \
+		echo "ERROR nodes found -- see README.md#known-gaps before assuming this is a regression."; \
+		exit 1; \
+	fi; \
+	echo "clean: no ERROR nodes in $(GLSMAC)/GLSMAC_data"
 
-all: lib$(LANGUAGE_NAME).a lib$(LANGUAGE_NAME).$(SOEXT) $(LANGUAGE_NAME).pc
-
-lib$(LANGUAGE_NAME).a: $(OBJS)
-	$(AR) $(ARFLAGS) $@ $^
-
-lib$(LANGUAGE_NAME).$(SOEXT): $(OBJS)
-	$(CC) $(LDFLAGS) $(LINKSHARED) $^ $(LDLIBS) -o $@
-ifneq ($(STRIP),)
-	$(STRIP) $@
-endif
-
-$(LANGUAGE_NAME).pc: bindings/c/$(LANGUAGE_NAME).pc.in
-	sed -e 's|@PROJECT_VERSION@|$(VERSION)|' \
-		-e 's|@CMAKE_INSTALL_LIBDIR@|$(LIBDIR:$(PREFIX)/%=%)|' \
-		-e 's|@CMAKE_INSTALL_INCLUDEDIR@|$(INCLUDEDIR:$(PREFIX)/%=%)|' \
-		-e 's|@PROJECT_DESCRIPTION@|$(DESCRIPTION)|' \
-		-e 's|@PROJECT_HOMEPAGE_URL@|$(HOMEPAGE_URL)|' \
-		-e 's|@CMAKE_INSTALL_PREFIX@|$(PREFIX)|' $< > $@
-
-$(PARSER): $(SRC_DIR)/grammar.json
-	$(TS) generate $^
-
-install: all
-	install -d '$(DESTDIR)$(DATADIR)'/tree-sitter/queries/javascript '$(DESTDIR)$(INCLUDEDIR)'/tree_sitter '$(DESTDIR)$(PCLIBDIR)' '$(DESTDIR)$(LIBDIR)'
-	install -m644 bindings/c/tree_sitter/$(LANGUAGE_NAME).h '$(DESTDIR)$(INCLUDEDIR)'/tree_sitter/$(LANGUAGE_NAME).h
-	install -m644 $(LANGUAGE_NAME).pc '$(DESTDIR)$(PCLIBDIR)'/$(LANGUAGE_NAME).pc
-	install -m644 lib$(LANGUAGE_NAME).a '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).a
-	install -m755 lib$(LANGUAGE_NAME).$(SOEXT) '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXTVER)
-	ln -sf lib$(LANGUAGE_NAME).$(SOEXTVER) '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXTVER_MAJOR)
-	ln -sf lib$(LANGUAGE_NAME).$(SOEXTVER_MAJOR) '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXT)
-ifneq ($(wildcard queries/*.scm),)
-	install -m644 queries/*.scm '$(DESTDIR)$(DATADIR)'/tree-sitter/queries/javascript
-endif
-
-uninstall:
-	$(RM) '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).a \
-		'$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXTVER) \
-		'$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXTVER_MAJOR) \
-		'$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXT) \
-		'$(DESTDIR)$(INCLUDEDIR)'/tree_sitter/$(LANGUAGE_NAME).h \
-		'$(DESTDIR)$(PCLIBDIR)'/$(LANGUAGE_NAME).pc
-	$(RM) -r '$(DESTDIR)$(DATADIR)'/tree-sitter/queries/javascript
+install: build
+	mkdir -p "$(NVIM_DATA)/parser" "$(NVIM_DATA)/queries/gls_js"
+	cp gls_js.so "$(NVIM_DATA)/parser/gls_js.so"
+	cp queries/highlights.scm "$(NVIM_DATA)/queries/gls_js/highlights.scm"
+	@echo "installed to $(NVIM_DATA)/parser/gls_js.so and $(NVIM_DATA)/queries/gls_js/"
 
 clean:
-	$(RM) $(OBJS) $(LANGUAGE_NAME).pc lib$(LANGUAGE_NAME).a lib$(LANGUAGE_NAME).$(SOEXT)
-
-test:
-	$(TS) test
-
-.PHONY: all install uninstall clean test
+	rm -rf gls_js.so src/parser.c node_modules
